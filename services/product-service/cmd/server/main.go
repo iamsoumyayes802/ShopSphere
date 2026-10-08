@@ -1,1 +1,6 @@
 package server
+
+
+func main() {
+	
+}
