@@ -5,7 +5,6 @@ go 1.26.4
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
-	modernc.org/libc v1.77.1
 )
 
 require (
