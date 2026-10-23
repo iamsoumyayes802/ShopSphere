@@ -2,6 +2,8 @@ package service
 
 import (
 	"auth-service/internal/model"
+	"crypto/rand"
+	"encoding/base64"
 	"os"
 	"time"
 
@@ -43,4 +45,14 @@ func GenerateJWT(user *model.User) (string, error) {
 	}
 
 	return token.SignedString(privateKey)
+}
+
+func GeneratePasswordResetToken() (string, error) {
+	b := make([]byte, 32)
+
+	if 	_, err := rand.Read(b); err != nil {
+		return "", nil
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }

@@ -102,3 +102,4 @@ func (s *AuthService) Signin(
 
 	return generateJWT(user)
 }
+
