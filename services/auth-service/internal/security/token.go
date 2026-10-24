@@ -1,9 +1,11 @@
-package service
+package security
 
 import (
 	"auth-service/internal/model"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"os"
 	"time"
 
@@ -56,3 +58,9 @@ func GeneratePasswordResetToken() (string, error) {
 
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
+
+func HashResetToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+    return hex.EncodeToString(sum[:])
+}
+

@@ -3,6 +3,7 @@ package service
 import (
 	"auth-service/internal/model"
 	"auth-service/internal/repository"
+	"auth-service/internal/security"
 	"context"
 	"errors"
 	"os"
@@ -16,6 +17,7 @@ import (
 
 type AuthService struct {
 	userRepo *repository.UserRepository
+	passwordRepo *repository.PasswordRepository
 }
 
 func NewAuthService(userRepo *repository.UserRepository) *AuthService {
@@ -59,7 +61,7 @@ func (s *AuthService) Signup(
 }
 
 func generateJWT(user *model.User) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
+	secret := os.Getenv("JWT_SECRET_PRIVATE_KEY")
 
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
@@ -68,7 +70,7 @@ func generateJWT(user *model.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
+		jwt.SigningMethodRS256,
 		claims,
 	)
 
@@ -103,3 +105,29 @@ func (s *AuthService) Signin(
 	return generateJWT(user)
 }
 
+func (s *AuthService) ForgotPassword(
+	ctx context.Context,
+	email string,
+) error {
+	user, err := s.userRepo.FindByEmail(ctx, email)
+
+	if err != nil {
+		return err
+	}
+
+	token, err := security.GeneratePasswordResetToken()
+
+	if err != nil {
+		return err
+	}
+
+	hashedToken := security.HashResetToken(token)
+	expiresAt := time.Now().UTC().Add(15 * time.Minute)
+
+	if err := s.passwordRepo.CreateResetToken(ctx, user.ID, hashedToken, expiresAt,); err != nil {
+		return err
+	}
+
+	// resetLink := "https://your-app.example/reset-password?token=" + token
+
+}
