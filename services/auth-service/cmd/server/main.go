@@ -38,17 +38,7 @@ func main() {
 	http.Handle(
 		"/users/me",
 		middleware.Auth(meHandler),
-	)
-
-	// admin 
-	// http.Handle(
-	// 	"/admin/test",
-	// 	middleware.Auth(
-	// 		middleware.RequireRole("ADMIN")(
-	// 			http.HandlerFunc(adminHandler),
-	// 		),
-	// 	),
-	// )	
+	)	
 
 	log.Println("Auth service is running on: 8080")
 

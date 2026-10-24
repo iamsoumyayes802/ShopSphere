@@ -11,6 +11,12 @@ type ProductRepository struct {
 	db *pgxpool.Pool
 }
 
+func NewProductRepository(db *pgxpool.Pool) *ProductRepository {
+	return &ProductRepository{
+		db: db,
+	}
+}
+
 func (r *ProductRepository) Create(
 	ctx context.Context,
 	product *model.Product,
@@ -69,5 +75,6 @@ func (r *ProductRepository) GetAll(
 
 		products = append(products, product)
 	}
+	
 	return products, rows.Err()
 }

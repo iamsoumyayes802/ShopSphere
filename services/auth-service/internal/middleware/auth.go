@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type contextKey string
@@ -17,62 +17,60 @@ const (
 )
 
 func Auth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHandler := r.Header.Get("Authorization")
+	keyBytes, err := os.ReadFile(os.Getenv("JWT_PUBLIC_KEY_ID"))
+	if err != nil {
+		panic("cannot load JWT public key: "+ err.Error())
+	}
 
-		if authHandler 	== "" {
-			http.Error(w, "missing authorization header", http.StatusUnauthorized)
-			return 
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(keyBytes)
+	if err != nil {
+		panic("invalid JWT public key: "+ err.Error())
+	}
+
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request)  {
+		header := strings.Fields(r.Header.Get("Authorization"))
+		if len(header) != 2 || header[0] != "Bearer" {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
 		}
 
-		parts := strings.Split(authHandler, " ")
+		claims := jwt.MapClaims{}
 
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "invalid authorization header", http.StatusUnauthorized)
-			return 
-		}
-
-		tokenString := parts[1]
-
-		token, err := jwt.Parse(
-			tokenString,
-			func (token *jwt.Token) (interface{}, error)  {
-				return []byte(os.Getenv("JWT_SECRET")), nil
+		token, err := jwt.ParseWithClaims(
+			header[1],
+			claims,
+			func (token *jwt.Token) (any, error)  {
+				if token.Method != jwt.SigningMethodRS256 {
+					return nil, jwt.ErrSignatureInvalid
+				}
+				return publicKey, nil
 			},
+			jwt.WithValidMethods([]string{"RS256"}),
+			jwt.WithIssuer("shopsphere-auth"),
+			jwt.WithAudience("shopsphere"),
+			jwt.WithExpirationRequired(),
 		)
 
 		if err != nil || !token.Valid {
-			http.Error(w, "invalid token", http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-
-		if !ok {
-			http.Error(w, "invalid token claims", http.StatusUnauthorized)
+		userID, ok := claims["sub"].(string)
+		if !ok || userID == "" {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		userID, ok := claims["user_id"].(string)
+		role, ok := claims["role"].(string)
 
-		if !ok {
-			http.Error(w, "invalid user id", http.StatusUnauthorized)
+		if !ok || (role != "USER" && role != "ADMIN") {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		role, _ := claims["role"].(string)
-
-		ctx := context.WithValue(
-			r.Context(),
-			UserIDKey,
-			userID,
-		)
-
-		ctx = context.WithValue(
-			ctx,
-			RoleKey,
-			role,
-		)
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		ctx = context.WithValue(ctx, RoleKey, role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
