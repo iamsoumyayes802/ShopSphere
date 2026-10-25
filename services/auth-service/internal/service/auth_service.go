@@ -1,6 +1,7 @@
 package service
 
 import (
+	"auth-service/internal/email"
 	"auth-service/internal/model"
 	"auth-service/internal/repository"
 	"auth-service/internal/security"
@@ -16,13 +17,23 @@ import (
 )
 
 type AuthService struct {
-	userRepo *repository.UserRepository
+	userRepo     *repository.UserRepository
 	passwordRepo *repository.PasswordRepository
+	emailSender email.Sender
+	frontendURL string
 }
 
-func NewAuthService(userRepo *repository.UserRepository) *AuthService {
+func NewAuthService(
+	userRepo *repository.UserRepository, 
+	passwordRepo *repository.PasswordRepository,
+	emailSender email.Sender,
+	frontendURL string,
+) *AuthService {
 	return &AuthService{
 		userRepo: userRepo,
+		passwordRepo: passwordRepo,
+		emailSender: emailSender,
+		frontendURL: strings.TrimRight(frontendURL, "/"),
 	}
 }
 
@@ -47,10 +58,10 @@ func (s *AuthService) Signup(
 	}
 
 	user := &model.User{
-		ID: uuid.New().String(),
-		Email: email,
+		ID:           uuid.New().String(),
+		Email:        email,
 		PasswordHash: string(hash),
-		Role: "USER",
+		Role:         "USER",
 	}
 
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
@@ -65,8 +76,8 @@ func generateJWT(user *model.User) (string, error) {
 
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
-		"role": user.Role,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+		"role":    user.Role,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(
@@ -124,10 +135,25 @@ func (s *AuthService) ForgotPassword(
 	hashedToken := security.HashResetToken(token)
 	expiresAt := time.Now().UTC().Add(15 * time.Minute)
 
-	if err := s.passwordRepo.CreateResetToken(ctx, user.ID, hashedToken, expiresAt,); err != nil {
+	if err := s.passwordRepo.CreateResetToken(
+		ctx,
+		user.ID,
+		hashedToken,
+		expiresAt,
+	); err != nil {
 		return err
 	}
 
-	// resetLink := "https://your-app.example/reset-password?token=" + token
+	resetLink := "https://your-app.example/reset-password?token=" + token
 
+	if err := s.emailSender.SendPasswordReset(
+		ctx,
+		user.Email,
+		resetLink,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
+
