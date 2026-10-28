@@ -1,6 +1,7 @@
 package main
 
 import (
+	"auth-service/internal/email"
 	"auth-service/internal/handler"
 	"auth-service/internal/middleware"
 	"auth-service/internal/repository"
@@ -25,8 +26,10 @@ func main() {
 	defer db.Close()
 
 	userRepo := repository.NewUserRepository(db)
+	passwordRepo := repository.NewPasswordRepository(db)
+	emailSender := email.NewSMTPSender("localhost", "6543", "soumya", "soumya@123", "soumyadipdey802@gmail.com")
 
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, passwordRepo, emailSender, "http://localhost:8080/")
 
 	authHandler := handler.NewAuthHandler(authService)
 
