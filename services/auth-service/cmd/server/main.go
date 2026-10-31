@@ -33,6 +33,10 @@ func main() {
 
 	authHandler := handler.NewAuthHandler(authService)
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`"hello form go auth server"`))
+	})
+
 	http.HandleFunc("/signup", authHandler.Signup)
 	http.HandleFunc("/signin", authHandler.Signin)
 

@@ -15,7 +15,7 @@ CREATE TABLE password_reset_tokens (
     expires_at TIMESTAMP NOT NULL,
     used_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW() 
-)
+);
 
 CREATE INDEX idx_password_reset_user_id
-    ON password_reset_tokens(user_id)
+    ON password_reset_tokens(user_id);

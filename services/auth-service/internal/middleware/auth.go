@@ -17,7 +17,7 @@ const (
 )
 
 func Auth(next http.Handler) http.Handler {
-	keyBytes, err := os.ReadFile(os.Getenv("JWT_PUBLIC_KEY_ID"))
+	keyBytes, err := os.ReadFile(os.Getenv("JWT_PUBLIC_KEY_PATH"))
 	if err != nil {
 		panic("cannot load JWT public key: "+ err.Error())
 	}
