@@ -6,6 +6,7 @@ import (
 	"auth-service/internal/middleware"
 	"auth-service/internal/repository"
 	"auth-service/internal/service"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -34,7 +35,14 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`"hello form go auth server"`))
+		w.Header().Set("Content-Type", "application/json")
+
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Welcome to Go API Version 2!",
+			"service": "go-api",
+			"version": "v2",
+			"status":  "updated",
+		})
 	})
 
 	http.HandleFunc("/signup", authHandler.Signup)

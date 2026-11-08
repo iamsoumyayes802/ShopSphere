@@ -5,8 +5,18 @@ metadata:
   name: auth-service
   labels:
     app: auth-service
+    environment: development
 spec:
   replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: 1
+      maxUnavailable: 0
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 60
+
   selector:
     matchLabels:
       app: auth-service
@@ -14,10 +24,16 @@ spec:
     metadata:
       labels:
         app: auth-service
+        environment: development
     spec:
+      nodeSelector:
+        workload: backend
       containers:
         - name: auth-service
           image: docker-auth-service:latest
+          env: 
+            - name: DATABASE_URL
+              value: "postgres://postgres:postgres@auth-db:5432/auth_db?sslmode=disable"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
