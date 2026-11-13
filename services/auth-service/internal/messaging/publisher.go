@@ -1,7 +1,7 @@
 package messaging
 
 import (
-	"auth-service/internal/messaging/events"
+	"auth-service/internal/events"
 	"encoding/json"
 
 	"github.com/nats-io/nats.go"
@@ -11,7 +11,14 @@ type Publisher struct {
 	Conn *nats.Conn
 }
 
-func (p *Publisher) PublishUserCreated(
+func NewPublisher(conn *nats.Conn) *Publisher {
+	return &Publisher{
+		Conn: conn,
+	}
+}
+
+func (p *Publisher) Publish(
+	subject string,
 	event events.UserCreatedEvent,
 ) error {
 	data, err := json.Marshal(event)
@@ -21,7 +28,7 @@ func (p *Publisher) PublishUserCreated(
 	}
 
 	return p.Conn.Publish(
-		"user_created",
+		subject,
 		data,
 	)
 }

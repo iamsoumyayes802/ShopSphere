@@ -10,7 +10,7 @@ type NATSClient struct {
 	Conn *nats.Conn
 }
 
-func NewNATSClient(url string) (*NATSClient, error) {
+func NewNATSConnection(url string) (*NATSClient, error) {
 	nc, err := nats.Connect(
 		url,
 		nats.Name("auth-service"),
