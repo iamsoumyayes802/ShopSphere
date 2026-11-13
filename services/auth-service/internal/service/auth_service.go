@@ -2,6 +2,7 @@ package service
 
 import (
 	"auth-service/internal/email"
+	"auth-service/internal/messaging/events"
 	"auth-service/internal/model"
 	"auth-service/internal/repository"
 	"auth-service/internal/security"
@@ -67,6 +68,8 @@ func (s *AuthService) Signup(
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
 		return nil, err
 	}
+
+	event := s.Publisher.UserCreatedEvent
 
 	return user, nil
 }

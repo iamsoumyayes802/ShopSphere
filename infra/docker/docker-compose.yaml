@@ -58,6 +58,13 @@ services:
   #     - "8081:8081"
   #   networks:
   #     - shopsphere-network
+  nats: 
+    image: nats:latest
+    container_name: nats
+    command: ["-js"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
 
 volumes:
   auth_db_data:
