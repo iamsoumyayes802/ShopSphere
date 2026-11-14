@@ -66,6 +66,21 @@ services:
       - "4222:4222"
       - "8222:8222"
 
+  web:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    container_name: web
+    restart: unless-stopped
+    ports:
+      - "8081:3000"
+    networks:
+      - shopsphere-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
 volumes:
   auth_db_data:
   auth_app_data:

@@ -1,16 +1,18 @@
 import Image from 'next/image'
-import React, { useState } from 'react'
-imp
+import Logo from "@/public/images/logo.png"
 
-export default function () {
+export default function Header (){
   return (
-    <div>
-        <div>
+    <div className='flex'>
+        <div className='flex justify-center'>
             <div>
-                <Image src={}
+                <Image alt='logo' src={Logo} />
             </div>
+            <p className='text-white'>ShopSphere</p>
         </div>
-        <div></div>
+        <div>
+
+        </div>
     </div>
   )
 }
